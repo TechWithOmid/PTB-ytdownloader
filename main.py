@@ -1,14 +1,12 @@
 import re
-# import tracemalloc
 from pytube import YouTube
 from decouple import config
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ApplicationBuilder, MessageHandler, filters
 
-# tracemalloc.start()
 
-pattern = r'^https?:\/\/(?:www\.)?youtube\.com\/playlist\?list=[\w-]+(?:&[\w-]+(=[\w-]*)?)*$'
-
+YOUTUBE_VIDEO_URL_PATTERN = r'(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})'
+YOUTUBE_PLAYLIST_URL_PATTERN = r'(https?://)?(www\.)?(youtube\.com/playlist\?list=)([a-zA-Z0-9_-]+)'
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -37,17 +35,22 @@ async def button(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="لینک پلی لیست رو برام بفرست.")
 
 async def handle_user_input(update: Update, context: CallbackContext) -> None:
-    user_input = update.message.text
+    result =update.message.text
     action = context.user_data.get('action')
 
-    if action == 'video':
+
+    if action == 'video' and re.match(YOUTUBE_VIDEO_URL_PATTERN, result):
         # Handle video download logic using user_input
-        link = YouTube(user_input)
+        link = YouTube(result)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"شروع دانلود ویدیو با عنوان: \n{link.title}")
-    elif action == 'playlist':
-        # Handle playlist download logic using user_input
+
+    elif action == 'playlist' and re.match(YOUTUBE_PLAYLIST_URL_PATTERN, result):
+        # Handle playlist download logic using result
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"دانلود پلی لیست: \n{link}")
     
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="ویدیو پیدا نشد. لینک را چک کنید و دوباره ارسال کنید.")
+
 if __name__ == "__main__":
     Token = config('token')
     application = ApplicationBuilder().token(Token).build()
