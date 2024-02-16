@@ -1,5 +1,5 @@
 import re
-from pytube import YouTube
+from pytube import YouTube, Playlist
 from decouple import config
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ApplicationBuilder, MessageHandler, filters
@@ -37,19 +37,29 @@ async def button(update: Update, context: CallbackContext) -> None:
 async def handle_user_input(update: Update, context: CallbackContext) -> None:
     result =update.message.text
     action = context.user_data.get('action')
-
+    chat_id=update.effective_chat.id
 
     if action == 'video' and re.match(YOUTUBE_VIDEO_URL_PATTERN, result):
-        # Handle video download logic using user_input
-        link = YouTube(result)
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"شروع دانلود ویدیو با عنوان: \n{link.title}")
+        try:
+            yt = YouTube(result)
+            video = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+            await context.bot.send_message(chat_id=chat_id, text="دانلود شروع شد...")
+            video_path = video.download()
+            with open(video_path, 'rb') as video_file:
+                await context.bot.send_video(chat_id=chat_id, video=result,
+                                             supports_streaming=True, caption=f"{yt.title}\n", read_timeout=100, write_timeout=100,
+                                             connect_timeout=100)
+
+        except Exception as e:
+            print(e)
+            await context.bot.send_message(chat_id=chat_id, text="در دریافت ویدیو مشکلی پیش آمد.")
 
     elif action == 'playlist' and re.match(YOUTUBE_PLAYLIST_URL_PATTERN, result):
         # Handle playlist download logic using result
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"دانلود پلی لیست: \n{link}")
+        await context.bot.send_message(chat_id=chat_id, text=f"دانلود پلی لیست:")
     
     else:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="ویدیو پیدا نشد. لینک را چک کنید و دوباره ارسال کنید.")
+        await context.bot.send_message(chat_id=chat_id, text="ویدیو پیدا نشد. لینک را چک کنید و دوباره ارسال کنید.")
 
 if __name__ == "__main__":
     Token = config('token')
