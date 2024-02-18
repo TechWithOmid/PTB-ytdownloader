@@ -61,7 +61,7 @@ async def handle_user_input(update: Update, context: CallbackContext) -> None:
     else:
         await context.bot.send_message(chat_id=chat_id, text="ویدیو پیدا نشد. لینک را چک کنید و دوباره ارسال کنید.")
 
-if __name__ == "__main__":
+def main():
     Token = config('token')
     application = ApplicationBuilder().token(Token).build()
     start_handler = CommandHandler('start', start)
@@ -72,3 +72,7 @@ if __name__ == "__main__":
         MessageHandler(filters.TEXT & (~filters.COMMAND), handle_user_input),
         ])
     application.run_polling()
+
+
+if __name__ == "__main__":
+    main()
