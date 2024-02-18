@@ -14,15 +14,18 @@ async def start(update: Update, context: CallbackContext) -> None:
         [
             InlineKeyboardButton("دانلود ویدیو", callback_data='video'),
             InlineKeyboardButton("دانلود پلی لیست", callback_data='playlist'),
+        ], 
+        [
+            InlineKeyboardButton('راهنما', callback_data='guide')
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('لطفا یکی از گزینه های زیر رو انتخاب کن:', reply_markup=reply_markup)
+    await update.message.reply_text('برای دانلود یک ویدیو از یوتوب گزینه ی دانلود ویدیو رو انتخاب کنید و برای دانلود پلی لیست گزینه ی دانلود از پلی لیست را انتخاب کنید.\nارسال ویدیو بسته به کیفیت و مدت زمان مقداری زمان میبرد.\n', reply_markup=reply_markup)
 
 async def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text(text=f"گزینه انتخاب شده: {query.data}")
+    # await query.edit_message_text(text=f"گزینه انتخاب شده: {query.data}")
 
     # Handle different actions based on user's choice
     if query.data == 'video':
@@ -33,6 +36,10 @@ async def button(update: Update, context: CallbackContext) -> None:
         # Set a state or use a context attribute to remember that the user is expecting a playlist link
         context.user_data['action'] = 'playlist'
         await context.bot.send_message(chat_id=update.effective_chat.id, text="لینک پلی لیست رو برام بفرست.")
+    elif query.data == 'guide':
+        # Set a state or use a context attribute to remember that the user is expecting a playlist link
+        context.user_data['action'] = 'guide'
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="استفاده از ربات سادست، کافیه یکی از گزینه های دانلود پلی لیست یا ویدیو رو انتخاب کنید و لینک ویدیو رو ارسال کنید اما در نظر داشته باشید که ارسال ویدیو برای شمازمان میبرد.")
 
 async def handle_user_input(update: Update, context: CallbackContext) -> None:
     result =update.message.text
